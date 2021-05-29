@@ -57,7 +57,7 @@ struct Field {
 	void doCells(function<void(int x, int y, Cell cell)>& callback) {
 		for (int i = 0; i < height * width; ++i)
 		{
-			callback(i / height, i % height, getCell(i));
+			callback(i % height, i / height, getCell(i));
 		}
 	}
 };

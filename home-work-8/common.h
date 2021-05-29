@@ -1,9 +1,10 @@
 #pragma once
 
-struct Coords { int x, y; };
+#include "utils.h"
 
 //using Cell = Field::Cell;
 enum class Cell : char {
+	unknown = '\0',
 	empty = '_',
 	x = 'X',
 	o = '0'

@@ -1,7 +1,7 @@
 #include "Game.h"
 #include "Ai.h"
 
-Game::Game(): playerCell{ Cell::x }, aiCell{ Cell::o }/*, ai{ *this, aiCell }*/ {
+Game::Game(): playerCell{ Cell::x }, aiCell{ Cell::o } {
 
 }
 
@@ -44,8 +44,10 @@ void Game::makeAiMove()
 	static Ai ai(*this, this->aiCell);
 	if (state != State::AI_MOVE)
 		error("Failed: not not ai a move");
-	Coords aiMove = ai.mind();
-	setCell(aiMove.x, aiMove.y, aiCell);
+	Coords aiMove;
+	bool bAiMoved = ai.mind(aiMove);
+	if (bAiMoved)
+		setCell(aiMove.x, aiMove.y, aiCell);
 	handleState(PLAYER_MOVE);
 }
 
@@ -73,7 +75,7 @@ bool Game::isProgress()
 
 bool Game::isEndGame()
 {
-	return !isProgress();
+	return bGameEnded || !isProgress();
 }
 
 Coords Game::reqMove()
@@ -167,7 +169,7 @@ State Game::getNewState()
 	if (x == width)
 		return whoWon(predCell);
 
-	if (getNotEmptyCells().empty())
+	if (getEmptyCells().empty())
 		return DRAW;
 	else return IN_PROGRESS;
 }

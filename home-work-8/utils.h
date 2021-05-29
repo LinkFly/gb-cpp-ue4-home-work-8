@@ -2,8 +2,11 @@
 
 #include <random>
 #include <string>
+#include <unordered_map>
 
 using namespace std;
+
+struct Coords { int x, y; };
 
 void error(const string& errMsg);
 
