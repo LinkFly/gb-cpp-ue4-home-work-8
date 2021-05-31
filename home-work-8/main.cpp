@@ -9,7 +9,12 @@ using namespace std;
 
 int main()
 {
-    Game{}.run();
-
+    cout << "Enter field size: ";
+    int size{};
+    cin >> size;
+    cout << "Enter number of figure for win: ";
+    int countForWin{};
+    cin >> countForWin;
+    Game{size, size, countForWin}.run();
     return 0;
 }

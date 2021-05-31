@@ -142,7 +142,7 @@
     <ClCompile Include="Ai.cpp" />
     <ClCompile Include="Collection.cpp" />
     <ClCompile Include="Game.cpp" />
-    <ClCompile Include="home-work-8.cpp" />
+    <ClCompile Include="main.cpp" />
     <ClCompile Include="utils.cpp" />
   </ItemGroup>
   <ItemGroup>

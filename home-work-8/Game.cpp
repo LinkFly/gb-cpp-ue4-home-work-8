@@ -1,8 +1,22 @@
 #include "Game.h"
 #include "Ai.h"
 
-Game::Game(): playerCell{ Cell::x }, aiCell{ Cell::o } {
+#include <cmath>
 
+using namespace std;
+
+Game::Game() : Game{ 3, 3 } {
+	//field.init();
+}
+
+Game::Game(int width, int height) : Game{ width, height, min(width, height) }
+{
+
+}
+
+Game::Game(int width, int height, int countForWin) :
+	playerCell{ Cell::x }, aiCell{ Cell::o }, field{ width, height }, countForWin{ countForWin }
+{
 }
 
 void Game::run()
@@ -105,6 +119,8 @@ void Game::setCell(int x, int y, Cell cell)
 
 State Game::getNewState()
 {
+	if (getEmptyCells().empty())
+		return DRAW;
 	static auto whoWon = [this](Cell cell) {
 		if (cell == aiCell)
 			return AI_WON;
@@ -117,19 +133,29 @@ State Game::getNewState()
 	function<Cell(int, int)> fnGetCell = [this](int x, int y) {return getCell(x, y); };
 	function<Cell(int, int)> fnRevGetCell = [this](int x, int y) {return getCell(y, x); };
 	auto checkHorizVert = [this](function<Cell(int, int)> fnGet, int width, int height) {
-		for (int y = 0; y < height; ++y) {
+		Cell predCell = Cell::unknown;
+		for (int y = 0; y < width; ++y) {
 			//Cell curCell = Cell::unknown;
-			Cell predCell = fnGet(0, y);
-			int x = 1;
-			for (; x < width; ++x) {
-				Cell curCell = fnGet(x, y);
-				if (curCell == Cell::empty)
+			int x = 0;
+			for (; x < width; ++x)
+			{
+				predCell = fnGet(x, y);
+				if (predCell != Cell::empty) {
+					++x;
 					break;
+				}
+			}
+			if (x == width || (width - (x - 1)) < countForWin)
+				continue;
+			int count = 1;
+			for (; x < width; ++x)
+			{
+				Cell curCell = fnGet(x, y);
 				if (curCell != predCell)
 					break;
-				predCell = curCell;
+				++count;
 			}
-			if (x == width)
+			if (count >= countForWin)
 				return whoWon(predCell);
 		}
 		return UNKNOWN;
@@ -143,35 +169,64 @@ State Game::getNewState()
 	if (state != UNKNOWN)
 		return state;
 
-	Cell predCell = getCell(0, 0);
-	int x = 1, y = 1;
-	for (; x < width; ++x, ++y) {
-		Cell curCell = getCell(x, y);
-		if (curCell == Cell::empty)
-			break;
-		if (curCell != predCell)
-			break;
-		predCell = curCell;
-	}
-	if (x == width)
-		return whoWon(predCell);
+	auto fnOnDiagonal = [this, &width, &height](function<bool(int& x, int& y)> fnNextXY, int x, int y) {
+		Cell predCell = Cell::unknown;
+		do {
+			predCell = getCell(x, y);
+			if (predCell != Cell::empty) {
+				fnNextXY(x, y);
+				break;
+			}	
+		} while(fnNextXY(x, y));
+		if (x == width || (width - (x - 1)) < countForWin)
+			return UNKNOWN;
 
-	predCell = getCell(0, height - 1);
-	x = 1, y = height - 2;
-	for (; x < width; ++x, --y) {
-		Cell curCell = getCell(x, y);
-		if (curCell == Cell::empty)
-			break;
-		if (curCell != predCell)
-			break;
-		predCell = curCell;
-	}
-	if (x == width)
-		return whoWon(predCell);
+		int count = 1;
+		do {
+			Cell curCell = getCell(x, y);
+			if (curCell != predCell)
+				break;
+			++count;
+		} while (fnNextXY(x, y));
+		return (count < this->countForWin) ? UNKNOWN : whoWon(predCell);
+	};
 
-	if (getEmptyCells().empty())
-		return DRAW;
-	else return IN_PROGRESS;
+	auto fnNextXY = [&width, &height](int& x, int& y) {
+		++x, ++y;
+		return x < width && y < height;
+	};
+	auto fnNextXYMirror = [&width](int& x, int& y) {
+		++x, --y;
+		return x < width && y >= 0;
+	};
+
+	for (int x = 0; x <= width - countForWin; ++x)
+	{
+		state = fnOnDiagonal(fnNextXY, x, 0);
+		if (state != UNKNOWN)
+			return state;
+	}
+	for (int y = 0; y <= height - countForWin; ++y)
+	{
+		state = fnOnDiagonal(fnNextXY, 0, y);
+		if (state != UNKNOWN)
+			return state;
+	}
+	
+	for (int x = 0; x <= width - countForWin; ++x)
+	{
+		state = fnOnDiagonal(fnNextXYMirror, x, height - 1);
+		if (state != UNKNOWN)
+			return state;
+	}
+	for (int y = height - 1; y >= height - countForWin; --y)
+	{
+		state = fnOnDiagonal(fnNextXYMirror, 0, y);
+		if (state != UNKNOWN)
+			return state;
+	}
+
+	return IN_PROGRESS;
 }
 
 std::vector<Coords> Game::getNotEmptyCells()

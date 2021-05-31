@@ -16,12 +16,14 @@ using namespace std;
 
 struct Game {
 	bool bGameEnded = false;
-	State state;
+	State state = State::PLAYER_MOVE;
 	Field field{};
 	Cell playerCell;
 	Cell aiCell;
-	//Ai ai;
+	int countForWin;
 	Game();
+	Game(int width, int height);
+	Game(int width, int height, int countForWin);
 
 	void run();
 
