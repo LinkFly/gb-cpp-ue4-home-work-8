@@ -1,10 +1,13 @@
 #include "Ai.h"
 #include "utils.h"
 #include "Collection.h"
+#include "Game.h"
 
 #include <unordered_map>
 
 using namespace std;
+
+Ai::Ai(Game* game, Cell& cell) : pGameModel{ game }, cell{ cell } {}
 
 DiffState Ai::tryMove(State& state, Coords coords, Cell cell)
 {

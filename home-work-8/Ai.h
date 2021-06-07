@@ -9,7 +9,7 @@
 struct Ai {
 	Game* pGameModel;
 	Cell& cell;
-	Ai(Game& game, Cell& cell) : pGameModel{ &game }, cell{ cell } {}
+	Ai(Game* game, Cell& cell);
 	DiffState tryMove(State& state, Coords coords, Cell cell = Cell::unknown);
 	DiffState tryMove(State& state, int x, int y, Cell cell = Cell::unknown);
 	function<bool(Collection& collect, Coords& otherCoords)> emptyFunc{};
@@ -20,5 +20,5 @@ struct Ai {
 		function<bool(Collection& collect, Coords& otherCoords)>* fnCheckNextWon = nullptr);
 	void restore(DiffState& move);
 	void restore(stack<DiffState>& moves);
-	bool mind(Coords& res);
+	virtual bool mind(Coords& res);
 };

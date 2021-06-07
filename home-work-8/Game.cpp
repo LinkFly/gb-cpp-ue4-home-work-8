@@ -5,27 +5,38 @@
 
 using namespace std;
 
+Ai* asPAi(void* ptr) {return reinterpret_cast<Ai*>(ptr); }
+
 Game::Game() : Game{ 3, 3 } {
-	//field.init();
+	//pField->init();
 }
 
 Game::Game(int width, int height) : Game{ width, height, min(width, height) }
 {
-
+	
 }
 
 Game::Game(int width, int height, int countForWin) :
-	playerCell{ Cell::x }, aiCell{ Cell::o }, field{ width, height }, countForWin{ countForWin }
+	playerCell{ Cell::x }, aiCell{ Cell::o }, countForWin{ countForWin }
 {
+	pField = new Field(width, height);
+	pAi = new Ai(this, aiCell);
 }
+
+Game::~Game() {
+	delete pAi;
+	delete pField;
+}
+//Game::Game(int size, int countForWin): Game{size, size, countForWin} {}
 
 void Game::run()
 {
 	initRand();
 	while (!bGameEnded) {
-		field.draw();
+		pField->draw();
 		state = PLAYER_MOVE;
 		Coords playerMove = reqMove();
+		if (isEndGame()) break;
 		makePlayerMove(playerMove.x, playerMove.y);
 		if (isEndGame()) break;
 		makeAiMove();
@@ -37,7 +48,7 @@ void Game::handleState(State stateIfNotEnd)
 {
 	state = getNewState();
 	if (isEndGame()) {
-		doEndGame();
+		//doEndGame();
 		bGameEnded = true;
 	}
 	else state = stateIfNotEnd;
@@ -55,7 +66,8 @@ void Game::makePlayerMove(int x, int y)
 
 void Game::makeAiMove()
 {
-	static Ai ai(*this, this->aiCell);
+	//static Ai ai(*this, this->aiCell);
+	Ai& ai = *asPAi(pAi);
 	if (state != State::AI_MOVE)
 		error("Failed: not not ai a move");
 	Coords aiMove;
@@ -72,14 +84,14 @@ DiffState Game::getDiffState(int x, int y)
 
 void Game::doEndGame()
 {
-	field.draw();
+	pField->draw();
 	switch (state) {
 	case PLAYER_WON: cout << "Player WON!"; break;
 	case AI_WON: cout << "Computer WON!"; break;
 	case DRAW: cout << "DRAW!"; break;
 	default: error("Failed: bad state");
 	}
-	bGameEnded = true;
+	//bGameEnded = true;
 }
 
 bool Game::isProgress()
@@ -109,30 +121,35 @@ Coords Game::reqMove()
 
 Cell Game::getCell(int x, int y)
 {
-	return field.getCell(x, y);
+	return pField->getCell(x, y);
 }
 
 void Game::setCell(int x, int y, Cell cell)
 {
-	return field.setCell(x, y, cell);
+	return pField->setCell(x, y, cell);
+}
+
+bool Game::isEmpty(int x, int y)
+{
+	return pField->isEmpty(x, y);
 }
 
 State Game::getNewState()
 {
 	if (getEmptyCells().empty())
 		return DRAW;
-	static auto whoWon = [this](Cell cell) {
+	auto whoWon = [this](Cell cell) {
 		if (cell == aiCell)
 			return AI_WON;
 		else if (cell == playerCell)
 			return PLAYER_WON;
 		return UNKNOWN;
 	};
-	auto& width = field.width;
-	auto& height = field.height;
+	auto& width = pField->width;
+	auto& height = pField->height;
 	function<Cell(int, int)> fnGetCell = [this](int x, int y) {return getCell(x, y); };
 	function<Cell(int, int)> fnRevGetCell = [this](int x, int y) {return getCell(y, x); };
-	auto checkHorizVert = [this](function<Cell(int, int)> fnGet, int width, int height) {
+	auto checkHorizVert = [this, &whoWon](function<Cell(int, int)> fnGet, int width, int height) {
 		Cell predCell = Cell::unknown;
 		for (int y = 0; y < width; ++y) {
 			//Cell curCell = Cell::unknown;
@@ -169,7 +186,7 @@ State Game::getNewState()
 	if (state != UNKNOWN)
 		return state;
 
-	auto fnOnDiagonal = [this, &width, &height](function<bool(int& x, int& y)> fnNextXY, int x, int y) {
+	auto fnOnDiagonal = [this, &width, &height, &whoWon](function<bool(int& x, int& y)> fnNextXY, int x, int y) {
 		Cell predCell = Cell::unknown;
 		do {
 			predCell = getCell(x, y);
@@ -236,7 +253,7 @@ std::vector<Coords> Game::getNotEmptyCells()
 		if (cell != Cell::empty)
 			res.push_back(Coords{ x, y });
 	};
-	field.doCells(callback);
+	pField->doCells(callback);
 	return res;
 }
 
@@ -247,6 +264,6 @@ std::vector<Coords> Game::getEmptyCells()
 		if (cell == Cell::empty)
 			res.push_back(Coords{ x, y });
 	};
-	field.doCells(callback);
+	pField->doCells(callback);
 	return res;
 }

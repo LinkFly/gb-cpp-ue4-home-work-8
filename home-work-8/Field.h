@@ -15,6 +15,7 @@ struct Field {
 	Field(int width, int height) : width{ width }, height{ height } {
 		init();
 	}
+	Field(int size): Field{size, size} {}
 	~Field() {
 		delete[] cells;
 	}
@@ -38,20 +39,23 @@ struct Field {
 	bool isEmpty(int x, int y) {
 		return getCell(x, y) == Cell::empty;
 	}
-	void draw() {
+	virtual void clear() {
 		system("cls");
+	}
+	virtual void draw() {
+		clear();
 		for (int y = 0; y < height; ++y)
 		{
 			for (int x = 0; x < width; ++x)
 			{
 				Cell curCell = getCell(x, y);
-				outCell(curCell);
+				outCell(x, y, curCell);
 				cout << " ";
 			}
 			cout << endl;
 		}
 	}
-	void outCell(Cell cell) {
+	virtual void outCell(int x, int y, Cell cell) {
 		cout << Field::asChar(cell) << " ";
 	}
 	void doCells(function<void(int x, int y, Cell cell)>& callback) {
