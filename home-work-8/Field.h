@@ -44,19 +44,24 @@ struct Field {
 	}
 	virtual void draw() {
 		clear();
+		cout << " ";
+		for (int x = 0; x < width; ++x)
+			cout << "|" << x + 1;
+		cout << "|" << endl;
 		for (int y = 0; y < height; ++y)
 		{
+			cout << (y + 1) << "|";
 			for (int x = 0; x < width; ++x)
 			{
 				Cell curCell = getCell(x, y);
 				outCell(x, y, curCell);
-				cout << " ";
+				cout << "|";
 			}
 			cout << endl;
 		}
 	}
 	virtual void outCell(int x, int y, Cell cell) {
-		cout << Field::asChar(cell) << " ";
+		cout << Field::asChar(cell);
 	}
 	void doCells(function<void(int x, int y, Cell cell)>& callback) {
 		for (int i = 0; i < height * width; ++i)

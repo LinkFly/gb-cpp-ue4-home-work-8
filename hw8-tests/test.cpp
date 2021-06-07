@@ -94,7 +94,7 @@ bool trivialTest() {
 	return testGame.testResult;
 }
 
-bool mainTest() {
+bool trivialTest2() {
 	TestData testData{};
 	vector<TestData> arTestData{
 		{
@@ -121,8 +121,9 @@ bool mainTest() {
 
 TEST(TestCaseName, TrivialTest) {
 	EXPECT_TRUE(trivialTest());
+	EXPECT_TRUE(trivialTest2());
 }
 
 TEST(TestCaseName, MainTest) {
-	EXPECT_TRUE(mainTest());
+	
 }
